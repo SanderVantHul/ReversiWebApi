@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace ReversieISpelImplementatie.Model
@@ -26,6 +27,8 @@ namespace ReversieISpelImplementatie.Model
         public string Speler2Token { get; set; }
 
         private Kleur[,] bord;
+
+        [JsonIgnore] // deze attribuut is nodig om ervoor te zorgen dat deze property niet door de api wordt verzonden
         public Kleur[,] Bord
         {
             get
@@ -37,6 +40,40 @@ namespace ReversieISpelImplementatie.Model
                 bord = value;
             }
         }
+
+        [JsonPropertyName("Bord")] 
+        public IList<string[]> JsonBord  // string representatie van Bord property
+        {
+            get
+            {
+                var value = new List<string[]>();
+                for (int i = 0; i < bordOmvang; i++)
+                {
+                    var bord = new string[bordOmvang];
+                    for (int j = 0; j < bordOmvang; j++)
+                    {
+                        switch (Bord[i, j])
+                        {
+                            case Kleur.Zwart:
+                                bord[j] = "Zwart";
+                                break;
+                            case Kleur.Wit:
+                                bord[j] = "Wit";
+                                break;
+                            case Kleur.Geen:
+                                bord[j] = "Geen";
+                                break;
+                            default:
+                                bord[j] = "Geen";
+                                break;
+                        }
+                    }
+                    value.Add(bord);
+                }
+                return value;
+            }
+        }
+
 
         public Kleur AandeBeurt { get; set; }
         public Spel()

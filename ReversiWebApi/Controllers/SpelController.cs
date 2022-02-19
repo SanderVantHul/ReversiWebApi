@@ -34,10 +34,10 @@ namespace ReversiWebApi.Controllers
             return Ok(spel.Token);
         }
 
-        [HttpGet("{spelToken}")]
-        public ActionResult<Spel> GetSpel(string spelToken)
+        [HttpGet("{token}")]
+        public ActionResult<Spel> GetSpel(string token) // werkt met spelertoken en spelltoken 
         {
-            Spel spel = iRepository.GetSpel(spelToken);
+            Spel spel = iRepository.GetSpel(token);
             if (spel == null) return NotFound();
             return Ok(spel);
         }
