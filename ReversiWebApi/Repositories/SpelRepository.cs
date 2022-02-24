@@ -31,7 +31,9 @@ namespace ReversiWebApi.Models
 
         public List<Spel> GetSpellen() => Spellen;
 
-        public Spel GetSpel(string token) => Spellen.Find(s => s.Token == token || s.Speler1Token == token || s.Speler2Token == token);
+        public Spel GetSpel(string token) => Spellen.Find(s => s.Token == token);
+
+        public Spel GetSpelMetSpelerToken(string token) => Spellen.Find(s => s.Speler1Token == token || s.Speler2Token == token);
 
     }
 }

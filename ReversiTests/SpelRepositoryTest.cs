@@ -81,7 +81,7 @@ namespace ReversiTests
             _repo.AddSpel(spel1);
 
             // act
-            Spel test = _repo.GetSpel(spel1.Token);
+            Spel test = _repo.GetSpelMetSpelerToken(spel1.Speler1Token);
 
             // assert
             Assert.AreEqual(test, spel1);
@@ -96,9 +96,11 @@ namespace ReversiTests
 
             // act
             Spel test = _repo.GetSpel(spel1.Token);
+            Spel test2 = _repo.GetSpelMetSpelerToken(spel1.Token);
 
             // assert
             Assert.IsNull(test);
+            Assert.IsNull(test2);
         }
     }
 }

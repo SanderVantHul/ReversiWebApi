@@ -11,6 +11,6 @@ namespace ReversiWebApi.Models
 
         Spel GetSpel(string spelToken);
 
-        // ...
+        Spel GetSpelMetSpelerToken(string spelerToken);
     }
 }

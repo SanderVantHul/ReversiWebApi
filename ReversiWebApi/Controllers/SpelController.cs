@@ -8,7 +8,7 @@ using System;
 
 namespace ReversiWebApi.Controllers
 {
-    [Route("api/Spel")]
+    [Route("api/[controller]")]
     [ApiController]
     public class SpelController : ControllerBase
     {
@@ -19,7 +19,6 @@ namespace ReversiWebApi.Controllers
             iRepository = repository;
         }
 
-        // GET api/spel
         [HttpGet]
         public ActionResult<IEnumerable<string>> GetSpelOmschrijvingenVanSpellenMetWachtendeSpeler()
         {
@@ -27,20 +26,51 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult<string> AddSpel(string token, string omschrijving)
+        public ActionResult<string> PostAddSpel(string token, string omschrijving)
         {
-            Spel spel = new Spel() { Token = Guid.NewGuid().ToString(), Speler1Token = token, Omschrijving = omschrijving };
+            Spel spel = new Spel() { Speler1Token = token, Omschrijving = omschrijving };
             iRepository.AddSpel(spel);
             return Ok(spel.Token);
         }
 
-        [HttpGet("{token}")]
-        public ActionResult<Spel> GetSpel(string token) // werkt met spelertoken en spelltoken 
+        [HttpGet("{spelToken:guid}")]
+        public ActionResult<Spel> GetSpel(string spelToken) 
         {
-            Spel spel = iRepository.GetSpel(token);
+            Spel spel = iRepository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel);
         }
 
+        [HttpGet("{spelerToken}")]
+        public ActionResult<Spel> GetSpelMetSpelerToken(string spelerToken)
+        {
+            Spel spel = iRepository.GetSpelMetSpelerToken(spelerToken);
+            if (spel == null) return NotFound();
+            return Ok(spel);
+        }
+
+        [HttpGet("Beurt/{spelToken}")]
+        public ActionResult<string> GetBeurt(string spelToken)
+        {
+            Spel spel = iRepository.GetSpel(spelToken);
+            if (spel == null) return NotFound();
+            return Ok(spel.AandeBeurt.ToString());
+        }
+
+        [HttpPut("Zet/{spelToken}")]
+        public ActionResult<Spel> PutDoeZet(string spelToken)
+        {
+            Spel spel = iRepository.GetSpel(spelToken);
+            if (spel == null) return NotFound();
+            return Ok(spel.AandeBeurt.ToString());
+        }
+
+        [HttpPut("Opgeven")]
+        public ActionResult<Spel> PutOpgeven(string spelToken)
+        {
+            Spel spel = iRepository.GetSpel(spelToken);
+            if (spel == null) return NotFound();
+            return Ok(spel.AandeBeurt.ToString());
+        }
     }
 }

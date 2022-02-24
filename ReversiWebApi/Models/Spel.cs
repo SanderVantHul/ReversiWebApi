@@ -41,7 +41,7 @@ namespace ReversieISpelImplementatie.Model
             }
         }
 
-        [JsonPropertyName("Bord")] 
+        [JsonPropertyName("bord")] 
         public IList<string[]> JsonBord  // string representatie van Bord property
         {
             get
