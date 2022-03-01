@@ -1,6 +1,6 @@
 using NUnit.Framework;
-using ReversieISpelImplementatie.Model;
 using System;
+using ReversiWebApi.Models;
 
 namespace NUnitTestProjectReversiSpel
 {

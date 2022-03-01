@@ -1,7 +1,7 @@
-﻿using ReversieISpelImplementatie.Model;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using ReversiWebApi.Models;
 
-namespace ReversiWebApi.Models
+namespace ReversiWebApi.Repositories
 {
     public interface ISpelRepository
     {

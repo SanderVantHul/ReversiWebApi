@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ReversiWebApi.Models;
+using ReversiWebApi.Repositories;
 using System.Collections.Generic;
 using System.Linq;
-using ReversieISpelImplementatie.Model;
-using System;
 
 namespace ReversiWebApi.Controllers
 {
@@ -12,39 +10,46 @@ namespace ReversiWebApi.Controllers
     [ApiController]
     public class SpelController : ControllerBase
     {
-        private readonly ISpelRepository iRepository;
+        private readonly ISpelRepository _repository;
 
         public SpelController(ISpelRepository repository)
         {
-            iRepository = repository;
+            _repository = repository;
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<string>> GetSpelOmschrijvingenVanSpellenMetWachtendeSpeler()
         {
-            return iRepository.GetSpellen().Where(s => s.Speler2Token == null).Select(s => s.Omschrijving).ToList();
+            return _repository.GetSpellen().Where(s => s.Speler2Token == null).Select(s => s.Omschrijving).ToList();
         }
 
         [HttpPost]
-        public ActionResult<string> PostAddSpel(string token, string omschrijving)
+        public ActionResult<Spel> PostToevoegenSpel([FromBody]string token, string omschrijving)
         {
             Spel spel = new Spel() { Speler1Token = token, Omschrijving = omschrijving };
-            iRepository.AddSpel(spel);
+            _repository.AddSpel(spel);
             return Ok(spel.Token);
         }
 
-        [HttpGet("{spelToken:guid}")]
+        [HttpPost("Spel2")]
+        public ActionResult<Spel> PostToevoegenSpel([FromBody]Spel spel)
+        {
+            _repository.AddSpel(spel);
+            return Ok(spel.Token);
+        }
+
+        [HttpGet("{spelToken}")]
         public ActionResult<Spel> GetSpel(string spelToken) 
         {
-            Spel spel = iRepository.GetSpel(spelToken);
+            Spel spel = _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel);
         }
 
-        [HttpGet("{spelerToken}")]
+        [HttpGet("Speler/{spelerToken}")]
         public ActionResult<Spel> GetSpelMetSpelerToken(string spelerToken)
         {
-            Spel spel = iRepository.GetSpelMetSpelerToken(spelerToken);
+            Spel spel = _repository.GetSpelMetSpelerToken(spelerToken);
             if (spel == null) return NotFound();
             return Ok(spel);
         }
@@ -52,23 +57,23 @@ namespace ReversiWebApi.Controllers
         [HttpGet("Beurt/{spelToken}")]
         public ActionResult<string> GetBeurt(string spelToken)
         {
-            Spel spel = iRepository.GetSpel(spelToken);
+            Spel spel = _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel.AandeBeurt.ToString());
         }
 
         [HttpPut("Zet/{spelToken}")]
-        public ActionResult<Spel> PutDoeZet(string spelToken)
+        public ActionResult<string> PutDoeZet(string spelToken)
         {
-            Spel spel = iRepository.GetSpel(spelToken);
+            Spel spel = _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel.AandeBeurt.ToString());
         }
 
         [HttpPut("Opgeven")]
-        public ActionResult<Spel> PutOpgeven(string spelToken)
+        public ActionResult<string> PutOpgeven(string spelToken)
         {
-            Spel spel = iRepository.GetSpel(spelToken);
+            Spel spel = _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel.AandeBeurt.ToString());
         }

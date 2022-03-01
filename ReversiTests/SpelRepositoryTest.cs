@@ -1,8 +1,7 @@
 ﻿using NUnit.Framework;
-using ReversieISpelImplementatie.Model;
-using ReversiWebApi.Models;
-using System;
 using System.Collections.Generic;
+using ReversiWebApi.Models;
+using ReversiWebApi.Repositories;
 
 namespace ReversiTests
 {

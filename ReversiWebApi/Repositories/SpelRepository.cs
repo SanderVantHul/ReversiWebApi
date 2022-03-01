@@ -1,8 +1,7 @@
-﻿using ReversieISpelImplementatie.Model;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using ReversiWebApi.Models;
 
-namespace ReversiWebApi.Models
+namespace ReversiWebApi.Repositories
 {
     public class SpelRepository : ISpelRepository
     {
@@ -23,7 +22,6 @@ namespace ReversiWebApi.Models
             spel3.Speler1Token = "stuvwx";
             spel3.Omschrijving = "Na dit spel wil ik er nog een paar spelen tegen zelfde tegenstander";
 
-
             Spellen = new List<Spel> { spel1, spel2, spel3 };
         }
 
@@ -34,6 +32,5 @@ namespace ReversiWebApi.Models
         public Spel GetSpel(string token) => Spellen.Find(s => s.Token == token);
 
         public Spel GetSpelMetSpelerToken(string token) => Spellen.Find(s => s.Speler1Token == token || s.Speler2Token == token);
-
     }
 }

@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
-namespace ReversieISpelImplementatie.Model
+namespace ReversiWebApi.Models
 {
-    public class Spel : ISpel
+    public partial class Spel : ISpel
     {
+        [NotMapped]
         private const int bordOmvang = 8;
+
+        [NotMapped]
         private readonly int[,] richting = new int[8, 2] {
                                 {  0,  1 },         // naar rechts
                                 {  0, -1 },         // naar links
@@ -20,62 +21,38 @@ namespace ReversieISpelImplementatie.Model
                                 { -1,  1 },         // naar rechtsboven
                                 { -1, -1 } };       // naar linksboven
 
-        public int ID { get; set; }
-        public string Omschrijving { get; set; }
-        public string Token { get; set; }
-        public string Speler1Token { get; set; }
-        public string Speler2Token { get; set; }
+        private Kleur[,] _bord;
 
-        private Kleur[,] bord;
-
-        [JsonIgnore] // deze attribuut is nodig om ervoor te zorgen dat deze property niet door de api wordt verzonden
+        [NotMapped]
+        [JsonIgnore]
         public Kleur[,] Bord
         {
             get
             {
-                return bord;
+                return _bord;
             }
             set
             {
-                bord = value;
+                _bord = value;
             }
         }
 
-        [JsonPropertyName("bord")] 
-        public IList<string[]> JsonBord  // string representatie van Bord property
-        {
-            get
-            {
-                var value = new List<string[]>();
-                for (int i = 0; i < bordOmvang; i++)
-                {
-                    var bord = new string[bordOmvang];
-                    for (int j = 0; j < bordOmvang; j++)
-                    {
-                        switch (Bord[i, j])
-                        {
-                            case Kleur.Zwart:
-                                bord[j] = "Zwart";
-                                break;
-                            case Kleur.Wit:
-                                bord[j] = "Wit";
-                                break;
-                            case Kleur.Geen:
-                                bord[j] = "Geen";
-                                break;
-                            default:
-                                bord[j] = "Geen";
-                                break;
-                        }
-                    }
-                    value.Add(bord);
-                }
-                return value;
-            }
-        }
+        public int ID { get; set; }
 
+        [MaxLength (255)]
+        public string Omschrijving { get; set; }
+
+        [MaxLength (255)]
+        public string Token { get; set; }
+
+        [MaxLength (255)]
+        public string Speler1Token { get; set; }
+
+        [MaxLength (255)]
+        public string Speler2Token { get; set; }
 
         public Kleur AandeBeurt { get; set; }
+
         public Spel()
         {
             Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
@@ -121,9 +98,9 @@ namespace ReversieISpelImplementatie.Model
             {
                 for (int kolomZet = 0; kolomZet < bordOmvang; kolomZet++)
                 {
-                    if (bord[rijZet, kolomZet] == Kleur.Wit)
+                    if (_bord[rijZet, kolomZet] == Kleur.Wit)
                         aantalWit++;
-                    else if (bord[rijZet, kolomZet] == Kleur.Zwart)
+                    else if (_bord[rijZet, kolomZet] == Kleur.Zwart)
                         aantalZwart++;
                 }
             }
@@ -137,20 +114,20 @@ namespace ReversieISpelImplementatie.Model
         public bool ZetMogelijk(int rijZet, int kolomZet)
         {
             if (!PositieBinnenBordGrenzen(rijZet, kolomZet))
-                throw new Exception($"Zet ({rijZet},{kolomZet}) ligt buiten het bord!");
+                throw new Exception($"Zet ({rijZet},{kolomZet}) ligt buiten het _bord!");
             return ZetMogelijk(rijZet, kolomZet, AandeBeurt);
         }
 
         public void DoeZet(int rijZet, int kolomZet)
         {
             if (!ZetMogelijk(rijZet, kolomZet)) { throw new Exception($"Zet ({rijZet},{kolomZet}) is niet mogelijk!"); }
-            
+
             for (int i = 0; i < richting.GetLength(0); i++)
             {
                 DraaiStenenVanTegenstanderInOpgegevenRichtingOmIndienIngesloten(rijZet, kolomZet, AandeBeurt, richting[i, 0], richting[i, 1]);
             }
             Bord[rijZet, kolomZet] = AandeBeurt;
-            
+
             WisselBeurt();
         }
 
@@ -213,7 +190,7 @@ namespace ReversieISpelImplementatie.Model
 
         private bool ZetOpBordEnNogVrij(int rijZet, int kolomZet)
         {
-            // Als op het bord gezet wordt, en veld nog vrij, dan return true, anders false
+            // Als op het _bord gezet wordt, en veld nog vrij, dan return true, anders false
             return (PositieBinnenBordGrenzen(rijZet, kolomZet) && Bord[rijZet, kolomZet] == Kleur.Geen);
         }
 
@@ -264,7 +241,7 @@ namespace ReversieISpelImplementatie.Model
                 rij = rijZet + rijRichting;
                 kolom = kolomZet + kolomRichting;
 
-                // N.b.: je weet zeker dat je niet buiten het bord belandt,
+                // N.b.: je weet zeker dat je niet buiten het _bord belandt,
                 // omdat de stenen van de tegenstander ingesloten zijn door
                 // een steen van degene die de zet doet.
                 while (Bord[rij, kolom] == kleurTegenstander)

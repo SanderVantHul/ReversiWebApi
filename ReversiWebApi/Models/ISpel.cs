@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ReversieISpelImplementatie.Model
+﻿
+namespace ReversiWebApi.Models
 {
     public enum Kleur { Geen, Wit, Zwart };
 

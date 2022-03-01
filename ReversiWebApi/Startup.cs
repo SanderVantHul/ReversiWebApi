@@ -1,17 +1,12 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using ReversiWebApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using ReversiWebApi.Data;
+using ReversiWebApi.Repositories;
 
 namespace ReversiWebApi
 {
@@ -33,7 +28,11 @@ namespace ReversiWebApi
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ReversiWebApi", Version = "v1" });
             });
 
-            services.AddSingleton<ISpelRepository, SpelRepository>();
+            services.AddScoped<ISpelRepository, SpelAccessLayer>();
+            services.AddDbContext<ReversiContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("Reversi"));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
