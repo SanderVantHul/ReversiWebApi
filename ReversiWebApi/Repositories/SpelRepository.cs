@@ -3,7 +3,7 @@ using ReversiWebApi.Models;
 
 namespace ReversiWebApi.Repositories
 {
-    public class SpelRepository : ISpelRepository
+    public class SpelRepository // komt niet langer overeen met ISpelRepository en wordt net meer gebruikt dus overerving verwijdert
     {
         // Lijst met tijdelijke spellen
         public List<Spel> Spellen { get; set; }

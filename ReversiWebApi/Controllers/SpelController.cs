@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System;
+using Microsoft.AspNetCore.Mvc;
 using ReversiWebApi.Models;
 using ReversiWebApi.Repositories;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace ReversiWebApi.Controllers
 {
@@ -18,64 +20,94 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<string>> GetSpelOmschrijvingenVanSpellenMetWachtendeSpeler()
+        public async Task<ActionResult<IEnumerable<string>>> GetSpelOmschrijvingenVanSpellenMetWachtendeSpeler()
         {
-            return _repository.GetSpellen().Where(s => s.Speler2Token == null).Select(s => s.Omschrijving).ToList();
-        }
-
-        [HttpPost]
-        public ActionResult<Spel> PostToevoegenSpel([FromBody]string token, string omschrijving)
-        {
-            Spel spel = new Spel() { Speler1Token = token, Omschrijving = omschrijving };
-            _repository.AddSpel(spel);
-            return Ok(spel.Token);
-        }
-
-        [HttpPost("Spel2")]
-        public ActionResult<Spel> PostToevoegenSpel([FromBody]Spel spel)
-        {
-            _repository.AddSpel(spel);
-            return Ok(spel.Token);
+            var spellen = await _repository.GetSpellen();
+            return spellen.Where(s => s.Speler2Token == null).Select(s => s.Omschrijving).ToList();
         }
 
         [HttpGet("{spelToken}")]
-        public ActionResult<Spel> GetSpel(string spelToken) 
+        public async Task<ActionResult<Spel>> GetSpel(string spelToken)
         {
-            Spel spel = _repository.GetSpel(spelToken);
+            Spel spel = await _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel);
         }
 
-        [HttpGet("Speler/{spelerToken}")]
-        public ActionResult<Spel> GetSpelMetSpelerToken(string spelerToken)
+        [HttpGet("Speler")]
+        public async Task<ActionResult<Spel>> GetSpelMetSpelerToken(string spelerToken)
         {
-            Spel spel = _repository.GetSpelMetSpelerToken(spelerToken);
+            Spel spel = await _repository.GetSpelMetSpelerToken(spelerToken);
             if (spel == null) return NotFound();
             return Ok(spel);
         }
 
-        [HttpGet("Beurt/{spelToken}")]
-        public ActionResult<string> GetBeurt(string spelToken)
+        [HttpGet("Beurt")]
+        public async Task<ActionResult<string>> GetBeurt(string spelToken)
         {
-            Spel spel = _repository.GetSpel(spelToken);
+            Spel spel = await _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel.AandeBeurt.ToString());
         }
 
-        [HttpPut("Zet/{spelToken}")]
-        public ActionResult<string> PutDoeZet(string spelToken)
+        [HttpPost]
+        public async Task<ActionResult<Spel>> ToevoegenSpel([FromBody] string token, string omschrijving)
         {
-            Spel spel = _repository.GetSpel(spelToken);
-            if (spel == null) return NotFound();
-            return Ok(spel.AandeBeurt.ToString());
+            Spel spel = new Spel() { Speler1Token = token, Omschrijving = omschrijving };
+            await _repository.AddSpel(spel);
+            return Ok(spel.Token);
         }
 
-        [HttpPut("Opgeven")]
-        public ActionResult<string> PutOpgeven(string spelToken)
+        [HttpPost("AddSpel/TestJsonConverter")]
+        public async Task<ActionResult<Spel>> ToevoegenSpel([FromBody] Spel spel)
         {
-            Spel spel = _repository.GetSpel(spelToken);
+            await _repository.AddSpel(spel);
+            return Ok(spel.Token);
+        }
+
+        [HttpPut("Zet")]
+        public async Task<ActionResult<Spel>> DoeZet(string spelToken, string spelerToken, int rij, int kolom)
+        {
+            Spel spel = await _repository.GetSpel(spelToken);
+            // validation
             if (spel == null) return NotFound();
-            return Ok(spel.AandeBeurt.ToString());
+            if (spel.Speler1Token != spelerToken && spel.Speler2Token != spelerToken) return Unauthorized("speler niet in dit spel");
+            if ((spel.Speler1Token == spelerToken ? Kleur.Wit : Kleur.Zwart) != spel.AandeBeurt) return Unauthorized("speler niet aan de beurt");
+
+            try
+            {
+                spel.DoeZet(rij, kolom);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            await _repository.Complete();
+
+            return Ok(spel);
+        }
+
+        [HttpPut("Passen")]
+        public async Task<ActionResult<string>> Passen(string spelToken, string spelerToken)
+        {
+            Spel spel = await _repository.GetSpel(spelToken);
+            if (spel == null) return NotFound();
+            if (spel.Speler1Token != spelerToken && spel.Speler2Token != spelerToken) return Unauthorized("speler niet in dit spel");
+            if ((spel.Speler1Token == spelerToken ? Kleur.Wit : Kleur.Zwart) != spel.AandeBeurt) return Unauthorized("speler niet aan de beurt");
+
+            try
+            {
+                spel.Pas();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            await _repository.Complete();
+
+            return Ok("Speler heeft beurt gepassed");
         }
     }
 }

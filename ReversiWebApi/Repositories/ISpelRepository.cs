@@ -1,16 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using ReversiWebApi.Models;
 
 namespace ReversiWebApi.Repositories
 {
     public interface ISpelRepository
     {
-        void AddSpel(Spel spel);
+        Task AddSpel(Spel spel);
 
-        public List<Spel> GetSpellen();
+        Task<List<Spel>> GetSpellen();
 
-        Spel GetSpel(string spelToken);
+        Task<Spel> GetSpel(string spelToken);
 
-        Spel GetSpelMetSpelerToken(string spelerToken);
+        Task<Spel> GetSpelMetSpelerToken(string spelerToken);
+
+        Task Complete();
     }
 }

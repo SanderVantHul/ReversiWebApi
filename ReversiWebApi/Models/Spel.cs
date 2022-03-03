@@ -8,10 +8,10 @@ namespace ReversiWebApi.Models
     public partial class Spel : ISpel
     {
         [NotMapped]
-        private const int bordOmvang = 8;
+        private const int _BORD_OMVANG = 8;
 
         [NotMapped]
-        private readonly int[,] richting = new int[8, 2] {
+        private readonly int[,] _richting = new int[8, 2] {
                                 {  0,  1 },         // naar rechts
                                 {  0, -1 },         // naar links
                                 {  1,  0 },         // naar onder
@@ -59,7 +59,7 @@ namespace ReversiWebApi.Models
             Token = Token.Replace("/", "q");    // slash mijden ivm het opvragen van een spel via een api obv het token
             Token = Token.Replace("+", "r");    // plus mijden ivm het opvragen van een spel via een api obv het token
 
-            Bord = new Kleur[bordOmvang, bordOmvang];
+            Bord = new Kleur[_BORD_OMVANG, _BORD_OMVANG];
             Bord[3, 3] = Kleur.Wit;
             Bord[4, 4] = Kleur.Wit;
             Bord[3, 4] = Kleur.Zwart;
@@ -76,6 +76,8 @@ namespace ReversiWebApi.Models
             else
                 WisselBeurt();
         }
+
+        private void WisselBeurt() => AandeBeurt = AandeBeurt == Kleur.Wit ? Kleur.Zwart : Kleur.Wit;
 
         // return true als geen van de spelers een zet kan doen
         public bool Afgelopen() => BordVol() || (!IsErEenZetMogelijk(Kleur.Wit) && !IsErEenZetMogelijk(Kleur.Zwart));
@@ -94,9 +96,9 @@ namespace ReversiWebApi.Models
         {
             int aantalWit = 0;
             int aantalZwart = 0;
-            for (int rijZet = 0; rijZet < bordOmvang; rijZet++)
+            for (int rijZet = 0; rijZet < _BORD_OMVANG; rijZet++)
             {
-                for (int kolomZet = 0; kolomZet < bordOmvang; kolomZet++)
+                for (int kolomZet = 0; kolomZet < _BORD_OMVANG; kolomZet++)
                 {
                     if (_bord[rijZet, kolomZet] == Kleur.Wit)
                         aantalWit++;
@@ -114,7 +116,7 @@ namespace ReversiWebApi.Models
         public bool ZetMogelijk(int rijZet, int kolomZet)
         {
             if (!PositieBinnenBordGrenzen(rijZet, kolomZet))
-                throw new Exception($"Zet ({rijZet},{kolomZet}) ligt buiten het _bord!");
+                throw new Exception($"Zet ({rijZet},{kolomZet}) ligt buiten het bord!");
             return ZetMogelijk(rijZet, kolomZet, AandeBeurt);
         }
 
@@ -122,9 +124,9 @@ namespace ReversiWebApi.Models
         {
             if (!ZetMogelijk(rijZet, kolomZet)) { throw new Exception($"Zet ({rijZet},{kolomZet}) is niet mogelijk!"); }
 
-            for (int i = 0; i < richting.GetLength(0); i++)
+            for (int i = 0; i < _richting.GetLength(0); i++)
             {
-                DraaiStenenVanTegenstanderInOpgegevenRichtingOmIndienIngesloten(rijZet, kolomZet, AandeBeurt, richting[i, 0], richting[i, 1]);
+                DraaiStenenVanTegenstanderInOpgegevenRichtingOmIndienIngesloten(rijZet, kolomZet, AandeBeurt, _richting[i, 0], _richting[i, 1]);
             }
             Bord[rijZet, kolomZet] = AandeBeurt;
 
@@ -146,9 +148,9 @@ namespace ReversiWebApi.Models
             if (kleur == Kleur.Geen)
                 throw new Exception("Kleur mag niet gelijk aan Geen zijn!");
             // controleeer of er een zet mogelijk is voor kleur
-            for (int rijZet = 0; rijZet < bordOmvang; rijZet++)
+            for (int rijZet = 0; rijZet < _BORD_OMVANG; rijZet++)
             {
-                for (int kolomZet = 0; kolomZet < bordOmvang; kolomZet++)
+                for (int kolomZet = 0; kolomZet < _BORD_OMVANG; kolomZet++)
                 {
                     if (ZetMogelijk(rijZet, kolomZet, kleur))
                     {
@@ -161,31 +163,23 @@ namespace ReversiWebApi.Models
 
         private bool ZetMogelijk(int rijZet, int kolomZet, Kleur kleur)
         {
-            // Check of er een richting is waarin een zet mogelijk is. Als dat zo is, return dan true.
+            // Check of er een _richting is waarin een zet mogelijk is. Als dat zo is, return dan true.
             for (int i = 0; i < 8; i++)
             {
                 {
                     if (StenenInTeSluitenInOpgegevenRichting(rijZet, kolomZet,
                                                              kleur,
-                                                             richting[i, 0], richting[i, 1]))
+                                                             _richting[i, 0], _richting[i, 1]))
                         return true;
                 }
             }
             return false;
         }
 
-        private void WisselBeurt()
-        {
-            if (AandeBeurt == Kleur.Wit)
-                AandeBeurt = Kleur.Zwart;
-            else
-                AandeBeurt = Kleur.Wit;
-        }
-
         private static bool PositieBinnenBordGrenzen(int rij, int kolom)
         {
-            return (rij >= 0 && rij < bordOmvang &&
-                    kolom >= 0 && kolom < bordOmvang);
+            return (rij >= 0 && rij < _BORD_OMVANG &&
+                    kolom >= 0 && kolom < _BORD_OMVANG);
         }
 
         private bool ZetOpBordEnNogVrij(int rijZet, int kolomZet)
@@ -222,7 +216,7 @@ namespace ReversiWebApi.Models
 
             // Nu kijk je hoe je geeindigt bent met bovenstaande loop. Alleen
             // als alle drie onderstaande condities waar zijn, zijn er in de
-            // opgegeven richting stenen in te sluiten.
+            // opgegeven _richting stenen in te sluiten.
             return (PositieBinnenBordGrenzen(rij, kolom) &&
                     Bord[rij, kolom] == kleurZetter &&
                     aantalNaastGelegenStenenVanTegenstander > 0);
