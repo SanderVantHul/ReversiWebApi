@@ -27,7 +27,7 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpGet("{spelToken}")]
-        public async Task<ActionResult<Spel>> GetSpel(string spelToken)
+        public async Task<ActionResult<Spel>> GetSpel([FromBody] string spelToken)
         {
             Spel spel = await _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
@@ -35,7 +35,7 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpGet("Speler")]
-        public async Task<ActionResult<Spel>> GetSpelMetSpelerToken(string spelerToken)
+        public async Task<ActionResult<Spel>> GetSpelMetSpelerToken([FromBody] string spelerToken)
         {
             Spel spel = await _repository.GetSpelMetSpelerToken(spelerToken);
             if (spel == null) return NotFound();
@@ -43,7 +43,7 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpGet("Beurt")]
-        public async Task<ActionResult<string>> GetBeurt(string spelToken)
+        public async Task<ActionResult<string>> GetBeurt([FromBody] string spelToken)
         {
             Spel spel = await _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
@@ -59,24 +59,24 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpPost("AddSpel/TestJsonConverter")]
-        public async Task<ActionResult<Spel>> ToevoegenSpel([FromBody] Spel spel)
+        public async Task<ActionResult<Spel>> ToevoegenSpel(Spel spel)
         {
             await _repository.AddSpel(spel);
             return Ok(spel.Token);
         }
 
         [HttpPut("Zet")]
-        public async Task<ActionResult<Spel>> DoeZet(string spelToken, string spelerToken, int rij, int kolom)
+        public async Task<ActionResult<Spel>> DoeZet([FromForm] string spelToken, [FromForm] string spelerToken, int rij, int kolom)
         {
-            Spel spel = await _repository.GetSpel(spelToken);
+            Spel spelResult = await _repository.GetSpel(spelToken);
             // validation
-            if (spel == null) return NotFound();
-            if (spel.Speler1Token != spelerToken && spel.Speler2Token != spelerToken) return Unauthorized("speler niet in dit spel");
-            if ((spel.Speler1Token == spelerToken ? Kleur.Wit : Kleur.Zwart) != spel.AandeBeurt) return Unauthorized("speler niet aan de beurt");
+            if (spelResult == null) return NotFound();
+            if (spelResult.Speler1Token != spelerToken && spelResult.Speler2Token != spelerToken) return Unauthorized("speler niet in dit spel");
+            if ((spelResult.Speler1Token == spelerToken ? Kleur.Wit : Kleur.Zwart) != spelResult.AandeBeurt) return Unauthorized("speler niet aan de beurt");
 
             try
             {
-                spel.DoeZet(rij, kolom);
+                spelResult.DoeZet(rij, kolom);
             }
             catch (Exception e)
             {
@@ -85,11 +85,11 @@ namespace ReversiWebApi.Controllers
 
             await _repository.Complete();
 
-            return Ok(spel);
+            return Ok(spelResult);
         }
 
         [HttpPut("Passen")]
-        public async Task<ActionResult<string>> Passen(string spelToken, string spelerToken)
+        public async Task<ActionResult<string>> Passen([FromForm] string spelToken, [FromForm] string spelerToken)
         {
             Spel spel = await _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();

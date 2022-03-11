@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 
 namespace ReversiWebApi.Models
@@ -8,9 +9,8 @@ namespace ReversiWebApi.Models
     public partial class Spel
     {
         [JsonPropertyName("bord")]
-        [Column("Bord")]
-        [MaxLength (255)]
-        public string StringBord  
+        [Column("Bord"), MaxLength(255)]
+        public string StringBord
         {
             get => JsonConvert.SerializeObject(Bord); // string representatie van Bord property
 
