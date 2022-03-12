@@ -1,2 +1,2 @@
 # Reversi-API
-Reversi web api voor Windesheim project.
+Reversi backend web api voor Windesheim project.
