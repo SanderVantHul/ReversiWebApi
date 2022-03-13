@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using ReversiWebApi.Data;
 using ReversiWebApi.Repositories;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace ReversiWebApi
 {
@@ -26,6 +28,9 @@ namespace ReversiWebApi
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "ReversiWebApi", Version = "v1" });
+
+                c.CustomOperationIds(apiDescription => 
+                    apiDescription.TryGetMethodInfo(out MethodInfo methodInfo) ? methodInfo.Name : null);
             });
 
             services.AddScoped<ISpelRepository, SpelAccessLayer>();
@@ -42,7 +47,11 @@ namespace ReversiWebApi
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ReversiWebApi v1"));
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ReversiWebApi v1");
+                    c.DisplayOperationId();
+                });
             }
 
             app.UseHttpsRedirection();

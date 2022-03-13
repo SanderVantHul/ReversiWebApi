@@ -26,6 +26,8 @@ namespace ReversiWebApi.Data
 
         public async Task<List<Spel>> GetSpellen() => await _context.Spellen.ToListAsync();
 
+        public async Task<List<Spel>> GetSpellenMetWachtendeSpeler() => await _context.Spellen.Where(s => s.Speler2Token == null).ToListAsync();
+
         public async Task<Spel> GetSpelMetSpelerToken(string spelerToken) =>
             await _context.Spellen.FirstOrDefaultAsync(s => s.Speler1Token == spelerToken || s.Speler2Token == spelerToken);
 

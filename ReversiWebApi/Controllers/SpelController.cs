@@ -5,6 +5,7 @@ using ReversiWebApi.Repositories;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace ReversiWebApi.Controllers
 {
@@ -20,22 +21,26 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<string>>> GetSpelOmschrijvingenVanSpellenMetWachtendeSpeler()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<Spel>>> GetSpellenMetWachtendeSpeler()
         {
-            var spellen = await _repository.GetSpellen();
-            return spellen.Where(s => s.Speler2Token == null).Select(s => s.Omschrijving).ToList();
+            return Ok(await _repository.GetSpellenMetWachtendeSpeler());
         }
 
         [HttpGet("{spelToken}")]
-        public async Task<ActionResult<Spel>> GetSpel([FromBody] string spelToken)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<Spel>> GetSpel(string spelToken)
         {
             Spel spel = await _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel);
         }
 
-        [HttpGet("Speler")]
-        public async Task<ActionResult<Spel>> GetSpelMetSpelerToken([FromBody] string spelerToken)
+        [HttpGet("~/api/Speler/{spelerToken}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<Spel>> GetSpelMetSpelerToken(string spelerToken)
         {
             Spel spel = await _repository.GetSpelMetSpelerToken(spelerToken);
             if (spel == null) return NotFound();
@@ -43,29 +48,38 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpGet("Beurt")]
-        public async Task<ActionResult<string>> GetBeurt([FromBody] string spelToken)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<string>> GetBeurt(string spelToken)
         {
             Spel spel = await _repository.GetSpel(spelToken);
             if (spel == null) return NotFound();
             return Ok(spel.AandeBeurt.ToString());
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Spel>> ToevoegenSpel([FromBody] string token, string omschrijving)
-        {
-            Spel spel = new Spel() { Speler1Token = token, Omschrijving = omschrijving };
-            await _repository.AddSpel(spel);
-            return Ok(spel.Token);
-        }
+        //[HttpPost("{omschrijving}")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        //public async Task<ActionResult<Spel>> ToevoegenSpel([FromBody] string token, string omschrijving)
+        //{
+        //    Spel spel = new Spel() { Speler1Token = token, Omschrijving = omschrijving };
+        //    await _repository.AddSpel(spel);
+        //    return Ok(spel.Token);
+        //}
 
-        [HttpPost("AddSpel/TestJsonConverter")]
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<Spel>> ToevoegenSpel(Spel spel)
         {
-            await _repository.AddSpel(spel);
-            return Ok(spel.Token);
+            var nieuwSpel = new Spel() { Speler1Token = spel.Speler1Token, Omschrijving = spel.Omschrijving};
+            await _repository.AddSpel(nieuwSpel);
+            return Ok(nieuwSpel.Token);
         }
 
         [HttpPut("Zet")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<Spel>> DoeZet([FromForm] string spelToken, [FromForm] string spelerToken, int rij, int kolom)
         {
             Spel spelResult = await _repository.GetSpel(spelToken);
@@ -89,6 +103,10 @@ namespace ReversiWebApi.Controllers
         }
 
         [HttpPut("Passen")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<string>> Passen([FromForm] string spelToken, [FromForm] string spelerToken)
         {
             Spel spel = await _repository.GetSpel(spelToken);
