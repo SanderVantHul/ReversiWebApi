@@ -17,6 +17,8 @@ namespace ReversiWebApi.Repositories
 
         Task<Spel> GetSpelMetSpelerToken(string spelerToken);
 
+        Task JoinSpel(SpelViewModel spel); 
+
         Task Complete();
     }
 }

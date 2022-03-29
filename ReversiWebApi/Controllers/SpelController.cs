@@ -75,22 +75,32 @@ namespace ReversiWebApi.Controllers
             return Ok(nieuwSpel.Token);
         }
 
-        [HttpPut("Zet")]
+        [HttpPost("~/api/Speler")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<string>> JoinSpel(SpelViewModel spel)
+        {
+            await _repository.JoinSpel(spel);
+            return Ok(spel.SpelToken);
+        }
+
+        [HttpPut("Zet/{rij}/{kolom}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<Spel>> DoeZet([FromForm] string spelToken, [FromForm] string spelerToken, int rij, int kolom)
+        public async Task<ActionResult<Spel>> DoeZet(SpelViewModel spelModel, int rij, int kolom)
         {
-            Spel spelResult = await _repository.GetSpel(spelToken);
+            Spel spelResult = await _repository.GetSpel(spelModel.SpelToken);
             // validation
             if (spelResult == null) return NotFound();
-            if (spelResult.Speler1Token != spelerToken && spelResult.Speler2Token != spelerToken) return Unauthorized("speler niet in dit spel");
-            if ((spelResult.Speler1Token == spelerToken ? Kleur.Wit : Kleur.Zwart) != spelResult.AandeBeurt) return Unauthorized("speler niet aan de beurt");
+            if (spelResult.Speler1Token != spelModel.SpelerToken && spelResult.Speler2Token != spelModel.SpelerToken) 
+                return Unauthorized("speler niet in dit spel");
+            if ((spelResult.Speler1Token == spelModel.SpelerToken ? Kleur.Wit : Kleur.Zwart) != spelResult.AandeBeurt) 
+                return Unauthorized("speler niet aan de beurt");
 
             try
             {
-                spelResult.DoeZet(rij, kolom);
+                spelResult.DoeZet(kolom - 1, rij - 1);
             }
             catch (Exception e)
             {

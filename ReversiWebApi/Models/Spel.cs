@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -39,16 +40,16 @@ namespace ReversiWebApi.Models
 
         public int ID { get; set; }
 
-        [MaxLength (255)]
+        [MaxLength(255)]
         public string Omschrijving { get; set; }
 
-        [MaxLength (255)]
+        [MaxLength(255)]
         public string Token { get; set; }
 
-        [MaxLength (255)]
+        [MaxLength(255)]
         public string Speler1Token { get; set; }
 
-        [MaxLength (255)]
+        [MaxLength(255)]
         public string Speler2Token { get; set; }
 
         public Kleur AandeBeurt { get; set; }
@@ -64,6 +65,10 @@ namespace ReversiWebApi.Models
             Bord[4, 4] = Kleur.Wit;
             Bord[3, 4] = Kleur.Zwart;
             Bord[4, 3] = Kleur.Zwart;
+            Bord[2, 3] = Kleur.MogelijkeZet;
+            Bord[3, 2] = Kleur.MogelijkeZet;
+            Bord[4, 5] = Kleur.MogelijkeZet;
+            Bord[5, 4] = Kleur.MogelijkeZet;
 
             AandeBeurt = Kleur.Geen;
         }
@@ -122,15 +127,20 @@ namespace ReversiWebApi.Models
 
         public void DoeZet(int rijZet, int kolomZet)
         {
-            if (!ZetMogelijk(rijZet, kolomZet)) { throw new Exception($"Zet ({rijZet},{kolomZet}) is niet mogelijk!"); }
+            RemoveHighlights();
+            if (!ZetMogelijk(rijZet, kolomZet))
+            {
+                HighlightMogelijkeZetten(AandeBeurt);
+                throw new Exception($"Zet ({rijZet},{kolomZet}) is niet mogelijk!");
+            }
 
             for (int i = 0; i < _richting.GetLength(0); i++)
             {
                 DraaiStenenVanTegenstanderInOpgegevenRichtingOmIndienIngesloten(rijZet, kolomZet, AandeBeurt, _richting[i, 0], _richting[i, 1]);
             }
             Bord[rijZet, kolomZet] = AandeBeurt;
-
             WisselBeurt();
+            HighlightMogelijkeZetten(AandeBeurt);
         }
 
         private static Kleur GetKleurTegenstander(Kleur kleur)
@@ -159,6 +169,37 @@ namespace ReversiWebApi.Models
                 }
             }
             return false;
+        }
+
+        private void HighlightMogelijkeZetten(Kleur kleur)
+        {
+            if (kleur == Kleur.Geen)
+                throw new Exception("Kleur mag niet gelijk aan Geen zijn!");
+            // controleer of er een zet mogelijk is voor kleur
+            for (int rijZet = 0; rijZet < _BORD_OMVANG; rijZet++)
+            {
+                for (int kolomZet = 0; kolomZet < _BORD_OMVANG; kolomZet++)
+                {
+                    if (ZetMogelijk(rijZet, kolomZet, kleur))
+                    {
+                        Bord[rijZet, kolomZet] = Kleur.MogelijkeZet;
+                    }
+                }
+            }
+        }
+
+        private void RemoveHighlights()
+        {
+            for (int rijZet = 0; rijZet < _BORD_OMVANG; rijZet++)
+            {
+                for (int kolomZet = 0; kolomZet < _BORD_OMVANG; kolomZet++)
+                {
+                    if (Bord[rijZet, kolomZet] == Kleur.MogelijkeZet)
+                    {
+                        Bord[rijZet, kolomZet] = Kleur.Geen;
+                    }
+                }
+            }
         }
 
         private bool ZetMogelijk(int rijZet, int kolomZet, Kleur kleur)

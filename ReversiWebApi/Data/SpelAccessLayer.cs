@@ -16,12 +16,6 @@ namespace ReversiWebApi.Data
             _context = context;
         }
 
-        public async Task AddSpel(Spel spel)
-        {
-            await _context.Spellen.AddAsync(spel);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task<Spel> GetSpel(string spelToken) => await _context.Spellen.FirstOrDefaultAsync(s => s.Token == spelToken);
 
         public async Task<List<Spel>> GetSpellen() => await _context.Spellen.ToListAsync();
@@ -30,6 +24,21 @@ namespace ReversiWebApi.Data
 
         public async Task<Spel> GetSpelMetSpelerToken(string spelerToken) =>
             await _context.Spellen.FirstOrDefaultAsync(s => s.Speler1Token == spelerToken || s.Speler2Token == spelerToken);
+
+        public async Task AddSpel(Spel spel)
+        {
+            await _context.Spellen.AddAsync(spel);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task JoinSpel(SpelViewModel spelModel)
+        {
+            var spel = await _context.Spellen.FirstOrDefaultAsync(s => s.Token == spelModel.SpelToken);
+            if (spel == null) return;
+            spel.Speler2Token = spelModel.SpelerToken; // todo -> add aan de beurt
+            await _context.SaveChangesAsync();
+        }
+            
 
         public async Task Complete() => await _context.SaveChangesAsync();
     }

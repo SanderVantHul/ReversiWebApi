@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Newtonsoft.Json;
 
-namespace ReversiWebApi.Models
+namespace ReversiWebApi.Models // zelfde namespace als andere spel.cs om partial werkend te krijgen
 {
     public partial class Spel
     {
