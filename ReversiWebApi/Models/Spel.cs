@@ -54,6 +54,9 @@ namespace ReversiWebApi.Models
 
         public Kleur AandeBeurt { get; set; }
 
+        public int AantalWit { get; set; }
+        public int AantalZwart { get; set; }
+
         public Spel()
         {
             Token = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
@@ -70,6 +73,9 @@ namespace ReversiWebApi.Models
             Bord[4, 5] = Kleur.MogelijkeZet;
             Bord[5, 4] = Kleur.MogelijkeZet;
 
+            AantalWit = 2;
+            AantalZwart = 2;
+
             AandeBeurt = Kleur.Geen;
         }
 
@@ -85,7 +91,13 @@ namespace ReversiWebApi.Models
         private void WisselBeurt() => AandeBeurt = AandeBeurt == Kleur.Wit ? Kleur.Zwart : Kleur.Wit;
 
         // return true als geen van de spelers een zet kan doen
-        public bool Afgelopen() => BordVol() || (!IsErEenZetMogelijk(Kleur.Wit) && !IsErEenZetMogelijk(Kleur.Zwart));
+        public bool Afgelopen()
+        {
+            RemoveHighlights();
+            bool afgelopen = BordVol() || (!IsErEenZetMogelijk(Kleur.Wit) && !IsErEenZetMogelijk(Kleur.Zwart));
+            HighlightMogelijkeZetten(AandeBeurt);
+            return afgelopen;
+        }
 
         public bool BordVol()
         {
@@ -141,6 +153,31 @@ namespace ReversiWebApi.Models
             Bord[rijZet, kolomZet] = AandeBeurt;
             WisselBeurt();
             HighlightMogelijkeZetten(AandeBeurt);
+            UpdateAantallen();
+        }
+
+        private void UpdateAantallen()
+        {
+            AantalZwart = 0;
+            AantalWit = 0;
+            foreach (var kleur in Bord)
+            {
+                switch (kleur)
+                {
+                    case Kleur.Wit:
+                        AantalWit++;
+                        break;
+                    case Kleur.Zwart:
+                        AantalZwart++;
+                        break;
+                    case Kleur.NewWit:
+                        AantalWit++;
+                        break;
+                    case Kleur.NewZwart:
+                        AantalZwart++;
+                        break;
+                }
+            }
         }
 
         private static Kleur GetKleurTegenstander(Kleur kleur)
@@ -171,7 +208,7 @@ namespace ReversiWebApi.Models
             return false;
         }
 
-        private void HighlightMogelijkeZetten(Kleur kleur)
+        public void HighlightMogelijkeZetten(Kleur kleur)
         {
             if (kleur == Kleur.Geen)
                 throw new Exception("Kleur mag niet gelijk aan Geen zijn!");
@@ -188,7 +225,7 @@ namespace ReversiWebApi.Models
             }
         }
 
-        private void RemoveHighlights()
+        public void RemoveHighlights()
         {
             for (int rijZet = 0; rijZet < _BORD_OMVANG; rijZet++)
             {
@@ -197,6 +234,16 @@ namespace ReversiWebApi.Models
                     if (Bord[rijZet, kolomZet] == Kleur.MogelijkeZet)
                     {
                         Bord[rijZet, kolomZet] = Kleur.Geen;
+                    }
+
+                    if (Bord[rijZet, kolomZet] == Kleur.NewWit)
+                    {
+                        Bord[rijZet, kolomZet] = Kleur.Wit;
+                    }
+
+                    if (Bord[rijZet, kolomZet] == Kleur.NewZwart)
+                    {
+                        Bord[rijZet, kolomZet] = Kleur.Zwart;
                     }
                 }
             }
@@ -281,7 +328,7 @@ namespace ReversiWebApi.Models
                 // een steen van degene die de zet doet.
                 while (Bord[rij, kolom] == kleurTegenstander)
                 {
-                    Bord[rij, kolom] = kleurZetter;
+                    Bord[rij, kolom] = kleurZetter == Kleur.Wit ? Kleur.NewWit : Kleur.NewZwart;
                     rij += rijRichting;
                     kolom += kolomRichting;
                 }

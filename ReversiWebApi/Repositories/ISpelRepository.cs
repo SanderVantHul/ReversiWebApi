@@ -17,7 +17,11 @@ namespace ReversiWebApi.Repositories
 
         Task<Spel> GetSpelMetSpelerToken(string spelerToken);
 
-        Task JoinSpel(SpelViewModel spel); 
+        Task JoinSpel(SpelViewModel spel);
+
+        Task Opgeven(Spel spel, string idSpelerDieOpgaf);
+
+        Task SpelVerwijderen(Spel spel);
 
         Task Complete();
     }

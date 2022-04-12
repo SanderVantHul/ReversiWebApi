@@ -1,6 +1,6 @@
 ﻿namespace ReversiWebApi.Models
 {
-    public enum Kleur { Geen, Wit, Zwart, MogelijkeZet = 5};
+    public enum Kleur { Geen, Wit, Zwart, NewWit, NewZwart, MogelijkeZet};
 
     public interface ISpel
     {

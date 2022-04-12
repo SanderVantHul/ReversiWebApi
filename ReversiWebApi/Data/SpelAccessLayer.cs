@@ -10,10 +10,12 @@ namespace ReversiWebApi.Data
     public class SpelAccessLayer : ISpelRepository
     {
         private ReversiContext _context;
+        private SpelerContext _spelerContext;
 
-        public SpelAccessLayer(ReversiContext context) // is injected in Startup.cs
+        public SpelAccessLayer(ReversiContext context, SpelerContext spelerContext) // is injected in Startup.cs
         {
             _context = context;
+            _spelerContext = spelerContext;
         }
 
         public async Task<Spel> GetSpel(string spelToken) => await _context.Spellen.FirstOrDefaultAsync(s => s.Token == spelToken);
@@ -35,10 +37,55 @@ namespace ReversiWebApi.Data
         {
             var spel = await _context.Spellen.FirstOrDefaultAsync(s => s.Token == spelModel.SpelToken);
             if (spel == null) return;
-            spel.Speler2Token = spelModel.SpelerToken; // todo -> add aan de beurt
+            spel.Speler2Token = spelModel.SpelerToken;
+            spel.AandeBeurt = Kleur.Zwart;
             await _context.SaveChangesAsync();
         }
             
+        public async Task Opgeven(Spel spel, string idSpelerDieOpgaf)
+        {
+            var verlorenSpeler = await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == idSpelerDieOpgaf);
+            if(verlorenSpeler != null) verlorenSpeler.AantalVerloren++;
+            
+            var idSpelerDieWon = spel.Speler1Token == idSpelerDieOpgaf ? spel.Speler2Token : spel.Speler1Token;
+            var gewonnenSpeler = await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == idSpelerDieWon);
+            if(gewonnenSpeler != null) gewonnenSpeler.AantalGewonnen++;
+            _context.Spellen.Remove(spel);
+            await _spelerContext.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task SpelVerwijderen(Spel spel)
+        {
+            if (spel.AantalWit > spel.AantalZwart)
+            {
+                var gewonnenSpeler= await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == spel.Speler1Token);
+                if(gewonnenSpeler != null) gewonnenSpeler.AantalGewonnen++;
+
+                var verlorenSpeler = await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == spel.Speler2Token);
+                if(verlorenSpeler != null) verlorenSpeler.AantalVerloren++;
+            }
+            else if(spel.AantalWit < spel.AantalZwart)
+            {
+                var verlorenSpeler = await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == spel.Speler1Token);
+                if(verlorenSpeler != null) verlorenSpeler.AantalVerloren++;
+
+                var gewonnenSpeler= await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == spel.Speler2Token);
+                if(gewonnenSpeler != null) gewonnenSpeler.AantalGewonnen++;
+            }
+            else
+            {
+                var verlorenSpeler = await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == spel.Speler1Token);
+                if(verlorenSpeler != null) verlorenSpeler.AantalGelijk++;
+
+                var gewonnenSpeler= await _spelerContext.Spelers.FirstOrDefaultAsync(s => s.Guid == spel.Speler2Token);
+                if(gewonnenSpeler != null) gewonnenSpeler.AantalGelijk++;
+            }
+
+            _context.Spellen.Remove(spel);
+            await _spelerContext.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+        }
 
         public async Task Complete() => await _context.SaveChangesAsync();
     }

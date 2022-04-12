@@ -38,6 +38,11 @@ namespace ReversiWebApi
             {
                 options.UseSqlServer(Configuration.GetConnectionString("Reversi"));
             });
+
+            services.AddDbContext<SpelerContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("Spellen"));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

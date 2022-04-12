@@ -57,20 +57,22 @@ namespace ReversiWebApi.Controllers
             return Ok(spel.AandeBeurt.ToString());
         }
 
-        //[HttpPost("{omschrijving}")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //public async Task<ActionResult<Spel>> ToevoegenSpel([FromBody] string token, string omschrijving)
-        //{
-        //    Spel spel = new Spel() { Speler1Token = token, Omschrijving = omschrijving };
-        //    await _repository.AddSpel(spel);
-        //    return Ok(spel.Token);
-        //}
+        [HttpGet("Afgelopen/{spelToken}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<bool>> SpelAfgelopen(string spelToken)
+        {
+            Spel spel = await _repository.GetSpel(spelToken);
+            if (spel == null) return BadRequest();
+            var afgelopen = spel.Afgelopen();
+            return Ok(afgelopen);
+        }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<Spel>> ToevoegenSpel(Spel spel)
+        public async Task<ActionResult<Spel>> ToevoegenSpel(SpelViewModel spelModel)
         {
-            var nieuwSpel = new Spel() { Speler1Token = spel.Speler1Token, Omschrijving = spel.Omschrijving};
+            var nieuwSpel = new Spel() { Speler1Token = spelModel.SpelerToken, Omschrijving = spelModel.Omschrijving};
             await _repository.AddSpel(nieuwSpel);
             return Ok(nieuwSpel.Token);
         }
@@ -117,12 +119,12 @@ namespace ReversiWebApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<string>> Passen([FromForm] string spelToken, [FromForm] string spelerToken)
+        public async Task<ActionResult<Spel>> Passen(SpelViewModel spelModel)
         {
-            Spel spel = await _repository.GetSpel(spelToken);
+            Spel spel = await _repository.GetSpel(spelModel.SpelToken);
             if (spel == null) return NotFound();
-            if (spel.Speler1Token != spelerToken && spel.Speler2Token != spelerToken) return Unauthorized("speler niet in dit spel");
-            if ((spel.Speler1Token == spelerToken ? Kleur.Wit : Kleur.Zwart) != spel.AandeBeurt) return Unauthorized("speler niet aan de beurt");
+            if (spel.Speler1Token != spelModel.SpelerToken && spel.Speler2Token != spelModel.SpelerToken) return Unauthorized("speler niet in dit spel");
+            if ((spel.Speler1Token == spelModel.SpelerToken ? Kleur.Wit : Kleur.Zwart) != spel.AandeBeurt) return Unauthorized("speler niet aan de beurt");
 
             try
             {
@@ -132,10 +134,49 @@ namespace ReversiWebApi.Controllers
             {
                 return BadRequest(e.Message);
             }
+            spel.RemoveHighlights();
+            spel.HighlightMogelijkeZetten(spel.AandeBeurt);
 
             await _repository.Complete();
 
-            return Ok("Speler heeft beurt gepassed");
+            return Ok(spel);
         }
+
+        [HttpDelete("~/api/Speler/{spelerId}")]
+        public async Task<ActionResult<bool>> Opgeven(string spelerId)
+        {
+            Spel spel = await _repository.GetSpelMetSpelerToken(spelerId);
+            if (spel == null) return NotFound();
+
+            try
+            {
+                await _repository.Opgeven(spel, spelerId);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            return Ok();
+        }
+
+        [HttpDelete("{spelToken}")]
+        public async Task<ActionResult<bool>> SpelVerwijderen(string spelToken)
+        {
+            Spel spel = await _repository.GetSpel(spelToken);
+            if (spel == null) return NotFound();
+
+            try
+            {
+                await _repository.SpelVerwijderen(spel);
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            return Ok();
+        }
+
     }
 }

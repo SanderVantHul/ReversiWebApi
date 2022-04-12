@@ -4,5 +4,6 @@
     {
         public string SpelerToken { get; set; }
         public string SpelToken { get; set; }
+        public string Omschrijving { get; set; }
     }
 }
